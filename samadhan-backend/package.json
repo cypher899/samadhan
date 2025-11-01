@@ -1,0 +1,25 @@
+{
+  "name": "Samadhan/backend",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "Samadhan",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "express-validator": "^7.2.1",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.14.3",
+    "sequelize": "^6.37.7",
+    "axios": "^1.11.0",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

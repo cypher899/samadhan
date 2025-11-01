@@ -1,0 +1,28 @@
+/* index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    font-family: 'Noto Sans Devanagari', sans-serif;
+    padding-top: 80px;
+    /* Add padding to account for fixed header */
+}
+
+/* Root element should take full height */
+#root {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ensure main content doesn't overlap with fixed header */
+main {
+    padding-top: 0;
+    flex: 1;
+}

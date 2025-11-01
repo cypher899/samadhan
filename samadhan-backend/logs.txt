@@ -1,0 +1,183 @@
+27-08-25:
+    app.js
+        removing unused variable
+        change in app.get(/): showing new message and removing the old query which shows data of jandarshan_data table
+        
+   
+    stats.js
+        updating the six portal graph query from desc to desc+reordering 
+
+        old:
+            if (timeRange === "weekly") {
+            query = `
+                SELECT * FROM (
+                SELECT 
+                    CONCAT(YEAR(createdAt), '-W', LPAD(WEEK(createdAt), 2, '0')) AS id,
+                    YEAR(createdAt) AS year, 
+                    WEEK(createdAt) AS week,
+                    MIN(createdAt) AS week_start,
+                    MAX(createdAt) AS week_end,
+                    SUM(COALESCE(pending, 0)) AS pending, 
+                    SUM(COALESCE(resolve, 0)) AS resolve, 
+                    SUM(COALESCE(total, 0)) AS total
+                FROM ${table}
+                WHERE createdAt >= DATE_SUB(CURDATE(), INTERVAL 16 WEEK)
+                GROUP BY YEAR(createdAt), WEEK(createdAt),
+                        CONCAT(YEAR(createdAt), '-W', LPAD(WEEK(createdAt), 2, '0'))
+                ORDER BY week_start DESC
+                LIMIT 16
+                ) sub
+                ORDER BY week_start ASC;
+            `;
+            } else if (timeRange === "monthly") {
+            query = `
+                SELECT * FROM (
+                SELECT 
+                    CONCAT(YEAR(createdAt), '-', LPAD(MONTH(createdAt), 2, '0')) AS id,
+                    YEAR(createdAt) AS year,
+                    MONTH(createdAt) AS month,
+                    MIN(createdAt) AS month_start,
+                    MAX(createdAt) AS month_end,
+                    SUM(COALESCE(pending, 0)) AS pending,
+                    SUM(COALESCE(resolve, 0)) AS resolve,
+                    SUM(COALESCE(total, 0)) AS total
+                FROM ${table}
+                WHERE createdAt >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+                GROUP BY YEAR(createdAt), MONTH(createdAt),
+                        CONCAT(YEAR(createdAt), '-', LPAD(MONTH(createdAt), 2, '0'))
+                ORDER BY month_start DESC
+                LIMIT 12
+                ) sub
+                ORDER BY month_start ASC;
+            `;
+            } else {
+            query = `
+                 SELECT id, 
+               COALESCE(pending, 0) as pending, 
+               COALESCE(resolve, 0) as resolve, 
+               COALESCE(total, 0) as total, 
+               createdAt
+        FROM ${table}
+        ORDER BY createdAt ASC
+        LIMIT 6
+            `;
+}
+
+    
+        new:
+
+                        if (timeRange === "weekly") {
+                query = `
+                SELECT * FROM (
+                    SELECT 
+                    CONCAT(YEAR(createdAt), '-W', LPAD(WEEK(createdAt), 2, '0')) AS id,
+                    YEAR(createdAt) AS year, 
+                    WEEK(createdAt) AS week,
+                    DATE(MIN(createdAt)) AS week_start,
+                    DATE(MAX(createdAt)) AS week_end,
+                    SUM(COALESCE(pending, 0)) AS pending, 
+                    SUM(COALESCE(resolve, 0)) AS resolve, 
+                    SUM(COALESCE(total, 0)) AS total
+                    FROM ${table}
+                    WHERE createdAt >= DATE_SUB(CURDATE(), INTERVAL 16 WEEK)
+                    GROUP BY YEAR(createdAt), WEEK(createdAt),
+                            CONCAT(YEAR(createdAt), '-W', LPAD(WEEK(createdAt), 2, '0'))
+                    ORDER BY week_start DESC
+                    LIMIT 16
+                ) sub
+                ORDER BY week_start ASC;
+
+            `;
+                } else if (timeRange === "monthly") {
+                query = `
+                SELECT * FROM (
+                SELECT 
+                    CONCAT(YEAR(createdAt), '-', LPAD(MONTH(createdAt), 2, '0')) AS id,
+                    YEAR(createdAt) AS year,
+                    MONTH(createdAt) AS month,
+                    MIN(createdAt) AS month_start,
+                    MAX(createdAt) AS month_end,
+                    SUM(COALESCE(pending, 0)) AS pending,
+                    SUM(COALESCE(resolve, 0)) AS resolve,
+                    SUM(COALESCE(total, 0)) AS total
+                FROM ${table}
+                WHERE createdAt >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+                GROUP BY YEAR(createdAt), MONTH(createdAt),
+                        CONCAT(YEAR(createdAt), '-', LPAD(MONTH(createdAt), 2, '0'))
+                ORDER BY month_start DESC
+                LIMIT 12
+                ) sub
+                ORDER BY month_start ASC;
+            `;
+                } else {
+                query = `
+                SELECT id, 
+                    COALESCE(pending, 0) as pending, 
+                    COALESCE(resolve, 0) as resolve, 
+                    COALESCE(total, 0) as total, 
+                    createdAt
+                FROM (
+                    SELECT id, 
+                        COALESCE(pending, 0) as pending, 
+                        COALESCE(resolve, 0) as resolve, 
+                        COALESCE(total, 0) as total, 
+                        createdAt
+                    FROM ${table}
+                    ORDER BY createdAt DESC
+                    LIMIT 6
+                ) sub
+                ORDER BY createdAt ASC;
+            `;
+                }
+
+
+    Portalstats.jsx
+        adding extra space in portal graph for monthly and weekly section
+
+        old:
+            <YAxis
+                          domain={[
+                            0,
+                            (dataMax) => Math.ceil(dataMax * 1.2) || 10,
+                          ]}
+                        />
+
+        new: 
+             <YAxis
+                          domain={[
+                            0,
+                            () => {
+                              if (
+                                Array.isArray(filteredPortalData) &&
+                                filteredPortalData.length > 0
+                              ) {
+                                const maxTotal = Math.max(
+                                  ...filteredPortalData.map((d) => {
+                                    const val = Number(d.total);
+                                    return isNaN(val) ? 0 : val;
+                                  })
+                                );
+                                return Math.ceil(maxTotal * 1.2) || 10; // add buffer
+                              }
+                              return 10; // fallback if no data
+                            },
+                          ]}
+                        />
+
+
+    Dashboard.jsx
+
+    old:
+        const [stats, setStats] = useState({
+                    total: 0,
+                    pending: 0,
+                    resolved: 0,
+                });
+
+
+        new:
+              const [_, setStats] = useState({
+                    total: 0,
+                    pending: 0,
+                    resolved: 0,
+                });
